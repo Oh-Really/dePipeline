@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+.ipynb_checkpoints
+*.json
+
+# Terraform
+.terraform
+Terraform/terraform.tfstate
+Terraform/terraform.tfstate.backup
+Terraform/.terraform.lock.hcl
+
+#Airflow
+.google
+airflow/
+local_ny_taxi_db/
