@@ -19,5 +19,7 @@ Terraform/.terraform.lock.hcl
 
 #Airflow
 .google
-airflow/
-local_ny_taxi_db/
+airflow/logs
+airflow/.env
+
+*.parquet
