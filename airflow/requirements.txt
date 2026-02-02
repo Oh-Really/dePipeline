@@ -1,0 +1,7 @@
+apache-airflow-providers-google
+apache-airflow-providers-fab
+pyarrow
+pandas
+sqlalchemy
+psycopg2-binary
+requests
