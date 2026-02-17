@@ -84,7 +84,7 @@ DATASETS = {
 @dag(
     dag_id="GCSUploadDag",
     start_date=datetime(2019, 1, 1),
-    end_date=datetime(2020, 1, 1),
+    end_date=datetime(2020, 12, 31),
     schedule = "@monthly",
     catchup=True,
     max_active_runs=3,
