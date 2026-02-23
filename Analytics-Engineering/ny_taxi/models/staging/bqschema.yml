@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: bigquery_raw_data
+    description: "Raw data for NYC taxi rides"
+    database: abiding-splicer-462011-a4
+    schema: ny_taxi
+    tables:
+      - name: green_external
+      - name: yellow_external
