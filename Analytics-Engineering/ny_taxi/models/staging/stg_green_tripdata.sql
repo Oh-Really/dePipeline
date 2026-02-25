@@ -29,8 +29,11 @@ renamed as (
         cast(ehail_fee as numeric) as ehail_fee,
         cast(improvement_surcharge as numeric) as improvement_surcharge,
         cast(total_amount as numeric) as total_amount,
-        cast(payment_type as integer) as payment_type
+        cast(payment_type as integer) as payment_type,
+        {{ get_payment_names('payment_type') }} as payment_type_description,
+        'Green' as service_type
     from tripdata
+    where vendorid is not null
 )
 
 select * from renamed

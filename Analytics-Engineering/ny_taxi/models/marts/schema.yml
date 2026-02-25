@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: dim_vendors
+    description: "Contains vendor information"
+    columns:
+      - name: vendor_id
+        description: "Unique identifier for each vendor"
+      - name: vendor_name
+        description: "Name for given vendor"
