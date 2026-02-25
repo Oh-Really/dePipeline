@@ -29,8 +29,11 @@ renamed as (
         cast(congestion_surcharge as numeric) as congestion_surcharge,
         cast(airport_fee as numeric) as airport_fee,
         cast(total_amount as numeric) as total_amount,
-        cast(payment_type as integer) as payment_type
+        cast(payment_type as integer) as payment_type,
+        {{ get_payment_names('payment_type') }} as payment_type_description,
+        'yellow' as service_type
     from tripdata
+    where vendorid is not null
 )
 
 select * from renamed
