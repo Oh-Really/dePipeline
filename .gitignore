@@ -23,3 +23,5 @@ airflow/logs
 airflow/.env
 
 *.parquet
+profiles.yml
+/target
