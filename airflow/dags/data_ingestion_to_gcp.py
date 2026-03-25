@@ -9,6 +9,8 @@ from datetime import datetime
 from pathlib import Path
 import logging
 import os
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 URL_PREFIX = "https://d37ci6vzurychx.cloudfront.net/trip-data"
 DOWNLOAD_DIR = "/tmp"
@@ -80,6 +82,11 @@ DATASETS = {
     },
 }
 
+CASTS_BY_DATASET = {
+    "yellow": {"airport_fee": pa.float64()},
+    "green": {"ehail_fee": pa.float64()},
+}
+
 
 @dag(
     dag_id="GCSUploadDag",
@@ -103,6 +110,38 @@ def download_parquet_and_upload_to_GCS():
         gcp_conn_id=GCP_CONN_ID,
     )
 
+    @task
+    def normalize_parquet_file(parquet_path: str, casts: dict[str, pa.DataType]) -> str:
+        """
+        Ensure specific columns have consistent Arrow types by rewriting parquet if needed.
+        casts: {"col_name": pa.float64(), ...}
+        Returns the (same) parquet_path.
+        """
+        p = Path(parquet_path)
+        if not p.exists() or p.stat().st_size == 0:
+            raise FileNotFoundError(f"Parquet not found or empty: {parquet_path}")
+
+        table = pq.read_table(parquet_path)
+
+        changed = False
+        cols = {name: table.column(name) for name in table.schema.names}
+
+        for col, target_type in casts.items():
+            if col not in cols:
+                continue
+
+            current_type = cols[col].type
+            if not current_type.equals(target_type):
+                # Cast to target type (preserves nulls)
+                cols[col] = pa.compute.cast(cols[col], target_type)
+                changed = True
+
+        if changed:
+            new_table = pa.table(cols)
+            pq.write_table(new_table, parquet_path)
+        return parquet_path
+
+
     for dataset, cfg in DATASETS.items():
         filename_prefix = cfg["filename_prefix"]
         bq_table = cfg["bq_table"]
@@ -120,9 +159,13 @@ def download_parquet_and_upload_to_GCS():
             """
         )
 
+        local_path = f"{DOWNLOAD_DIR}/{filename_prefix}_{{{{ ds[:7] }}}}.parquet"
+        normalized_path = normalize_parquet_file(local_path, CASTS_BY_DATASET[dataset])
+
         upload = LocalFilesystemToGCSOperator(
         task_id=f"upload_{dataset}_to_gcs",
-        src=f"{DOWNLOAD_DIR}/{filename_prefix}_{{{{ ds[:7] }}}}.parquet",
+        #src=f"{DOWNLOAD_DIR}/{filename_prefix}_{{{{ ds[:7] }}}}.parquet",
+        src=normalized_path,
         dst=f"{GCS_PREFIX}/{dataset}/{filename_prefix}_{{{{ ds[:7] }}}}.parquet",
         bucket=BUCKET,
         gcp_conn_id=GCP_CONN_ID
@@ -153,7 +196,7 @@ def download_parquet_and_upload_to_GCS():
             gcp_conn_id=GCP_CONN_ID,
         )
        
-        ensure_dataset >> download >> upload >> create_external
+        ensure_dataset >> download >> normalized_path >> upload >> create_external
 
         upload_tasks.append(upload)
         bq_table_tasks.append(create_external)
