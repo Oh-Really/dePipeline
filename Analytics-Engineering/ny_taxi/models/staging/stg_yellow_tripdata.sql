@@ -31,7 +31,7 @@ renamed as (
         cast(total_amount as numeric) as total_amount,
         cast(payment_type as integer) as payment_type,
         {{ get_payment_names('payment_type') }} as payment_type_description,
-        'yellow' as service_type
+        'Yellow' as service_type
     from tripdata
     where vendorid is not null
 )
